@@ -16,6 +16,7 @@ module.exports = function(grunt) {
 	var path = require('path');
 	var awk = process.platform === 'win32'? 'gawk' : 'awk';
 	var no_run_if_empty = process.platform !== 'darwin' ? '--no-run-if-empty ' : '';
+	var wporg_password = process.env.WPORG_PASSWORD ? process.env.WPORG_PASSWORD: '';
 
 	var clearTrunk = function ( ctxt, callback ) {
 		grunt.log.writeln( 'Clearing trunk.');
@@ -115,7 +116,7 @@ module.exports = function(grunt) {
 	var commitToTrunk = function( ctxt, callback ) {
 		var trunkCommitMsg = "Committing " + ctxt.new_version + " to trunk";
 		grunt.log.writeln( "\n" + trunkCommitMsg + "\n" );
-		var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" -m "'+trunkCommitMsg+'"';
+		var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" ' + ctxt.password_flag + ' -m "'+trunkCommitMsg+'"';
 		exec( cmd, {cwd:ctxt.svnpath+'/trunk'}, function(error, stdout, stderr) {
 			if (error !== null) {
 				grunt.fail.warn( 'Failed to commit to trunk: ' + error );
@@ -127,7 +128,7 @@ module.exports = function(grunt) {
 	var checkTag = function( ctxt, callback ) {
 		var tagCheckMsg   = "Checking tag " + ctxt.new_version;
 		grunt.log.writeln( tagCheckMsg + "\n" );
-		var cmd = 'svn co ' + ctxt.svnurl + 'tags/' + ctxt.new_version + '/ ' + ctxt.svnpath + '/' + ctxt.new_version + '/ --username="'+ctxt.svnuser+'"';
+		var cmd = 'svn co ' + ctxt.svnurl + 'tags/' + ctxt.new_version + '/ ' + ctxt.svnpath + '/' + ctxt.new_version + '/ --username="'+ctxt.svnuser+'" ' + ctxt.password_flag;
 		exec( cmd, function( error, stdout, stderr) {
 			if (error === null) {
 				grunt.fail.fatal( 'Tag already exists' );
@@ -139,7 +140,7 @@ module.exports = function(grunt) {
 	var commitTag = function( ctxt, callback ) {
 		var tagCommitMsg   = "Tagging " + ctxt.new_version;
 		grunt.log.writeln( tagCommitMsg + "\n" );
-		var cmd = 'svn copy ' + ctxt.svnurl + 'trunk/ ' + ctxt.svnurl + 'tags/' + ctxt.new_version + '/ ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" -m "'+tagCommitMsg+'"';
+		var cmd = 'svn copy ' + ctxt.svnurl + 'trunk/ ' + ctxt.svnurl + 'tags/' + ctxt.new_version + '/ ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" ' + ctxt.password_flag + ' -m "'+tagCommitMsg+'"';
 		exec( cmd , { cwd: ctxt.svnpath }, function( error, stdout, stderr) {
 			if (error !== null) {
 				grunt.fail.warn( 'Failed to commit tag: ' + error );
@@ -164,7 +165,7 @@ module.exports = function(grunt) {
 		var assetCommitMsg = "Committing assets for " + ctxt.new_version;
 		grunt.log.writeln( assetCommitMsg + "\n" );
 
-		var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" -m "'+assetCommitMsg+'"';
+		var cmd = 'svn commit ' + ctxt.force_interactive + ' --username="'+ctxt.svnuser+'" ' + ctxt.password_flag + ' -m "'+assetCommitMsg+'"';
 
 		exec( cmd,{ cwd: ctxt.svnpath+"/assets" }, function(error, stdout, stderr) {
 			if (error !== null) {
@@ -219,6 +220,7 @@ module.exports = function(grunt) {
 			max_buffer: 200*1024,
 			skip_confirmation: false,
 			force_interactive: true,
+			password_flag: wporg_password.length > 0 ? '--password="' + wporg_password.replace(/\\([\s\S])|(")/g,"\\$1$2") + '"' : '', // Escape double qoutes which could be present in password
 			deploy_trunk: true,
 			deploy_tag: true
 		});
