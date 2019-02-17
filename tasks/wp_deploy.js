@@ -220,7 +220,6 @@ module.exports = function(grunt) {
 			max_buffer: 200*1024,
 			skip_confirmation: false,
 			force_interactive: true,
-			password_flag: wporg_password.length > 0 ? '--password="' + wporg_password.replace(/\\([\s\S])|(")/g,"\\$1$2") + '"' : '', // Escape double qoutes which could be present in password
 			deploy_trunk: true,
 			deploy_tag: true
 		});
@@ -307,6 +306,7 @@ module.exports = function(grunt) {
 				build_dir: build_dir,
 				assets_dir: options.assets_dir,
 				force_interactive: options.force_interactive ? '--force-interactive' : '',
+				password_flag: wporg_password.length > 0 ? '--password="' + wporg_password.replace(/\\([\s\S])|(")/g,"\\$1$2") + '"' : '', // Escape double qoutes which could be present in password
 				deploy_tag: options.deploy_tag
 			};
 
